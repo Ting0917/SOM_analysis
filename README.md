@@ -4,7 +4,6 @@ COMP5048 Assignment 2 — Ting-Chen (Selina) Chen
 
 
 
-
 This repository implements a full visual-analytics pipeline using Self-Organizing Maps (SOM), data-driven period detection, macro-economic group classification, and a custom interactive dashboard to analyze 217 countries across 2000–2024.
 
 📦 Project Structure
