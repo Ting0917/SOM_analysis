@@ -1,168 +1,225 @@
-🌍 Macro-Economic SOM Analysis & Interactive Dashboard
+# 🌍 Macro-Economic SOM Analysis & Interactive Dashboard
 
-COMP5048 Assignment 2 — Ting-Chen (Selina) Chen
+**COMP5048 Assignment 2** — Ting-Chen (Selina) Chen
 
+This repository implements a full visual-analytics pipeline using Self-Organizing Maps (SOM), data-driven period detection, macro-economic group classification, and a custom interactive dashboard to analyze **217 countries** across **2000–2024**.
 
+---
 
-This repository implements a full visual-analytics pipeline using Self-Organizing Maps (SOM), data-driven period detection, macro-economic group classification, and a custom interactive dashboard to analyze 217 countries across 2000–2024.
+## 📦 Project Structure
 
-📦 Project Structure
-📁 project/
- ├── 5048_data.xlsx
- ├── SOM_analysis_with_attribute_importance.ipynb
- ├── 5048_groupings_with_importance.py
- ├── interactive_dashboard.html
- ├── 5048_Ting-Chen.docx
- └── README.md
+```
+project/
+├── 5048_data.xlsx                              # Raw economic indicator data
+├── SOM_analysis_with_attribute_importance.ipynb # Jupyter notebook for analysis
+├── 5048_groupings_with_importance.py           # Main Python implementation
+├── interactive_dashboard.html                  # Interactive visualization dashboard
+├── 5048_Ting-Chen.docx                         # Full project report
+└── README.md                                   # This file
+```
 
-🚀 Overview
+---
 
-This project answers two core questions:
+## 🚀 Overview
 
-1️⃣ How did global economic structures evolve from 2000–2024?
-2️⃣ What combination of indicators best explains country grouping within each period?
+This project answers two core research questions:
 
-To answer these, the project integrates:
+**1️⃣ How did global economic structures evolve from 2000–2024?**  
+**2️⃣ What combination of indicators best explains country grouping within each period?**
 
-SOM topology learning
+To answer these questions, the project integrates:
 
-Automatic structural-break detection
+- ✅ **SOM topology learning** for pattern discovery
+- ✅ **Automatic structural-break detection** for period identification
+- ✅ **Rule-based macroeconomic classification** (Groups A/B/C/D)
+- ✅ **ANOVA-based attribute importance ranking**
+- ✅ **Temporal group evolution visualization**
+- ✅ **Interactive exploration dashboard** (HTML + CSS + Plotly)
 
-Rule-based macroeconomic classification (A/B/C/D)
+---
 
-ANOVA-based attribute importance ranking
+## 🧠 Method Summary
 
-Temporal group evolution visualisation
+### 1. Data Preprocessing
 
-Interactive exploration dashboard (HTML + CSS + Plotly)
+**Techniques Applied:**
+- ✔ IQR-based scaling for robustness
+- ✔ Log transforms for skewed distributions
+- ✔ Missing-value retention (no imputation)
+- ✔ Yearly feature matrices for 217 countries
 
-🧠 Method Summary
-1. Data Preprocessing
+**Implemented in:** `5048_groupings_with_importance.py`
 
-✔ IQR-based scaling
-✔ Log transforms
-✔ Missing-value retention (no imputation)
-✔ Yearly feature matrices for 217 countries
+---
 
-Implemented in: 5048_groupings_with_importance.py
+### 2. Period Detection (Automatic)
 
+A **20×20 SOM** is trained on all observations. For each pair of consecutive years, a composite structural-change score is calculated using:
 
-5048_groupings_with_importance
+- **Euclidean distance**
+- **Cosine distance**  
+- **Wasserstein distance**
 
-2. Period Detection (Automatic)
+Top breakpoints identify **7 distinct periods** in global economic evolution.
 
-A 20×20 SOM is trained on all observations.
-For each pair of consecutive years, a composite structural-change score is calculated using:
+---
 
-Euclidean distance
+### 3. Country Grouping (Macro Groups A/B/C/D)
 
-Cosine distance
+Countries are classified into four macro-economic groups based on economic indicators:
 
-Wasserstein distance
+| Group | Criteria | Definition |
+|-------|----------|------------|
+| **A** | GDP/capita > $25,000 | High-Income Advanced |
+| **B** | $8,000–$25,000 & stable inflation | Emerging & Upper Middle |
+| **C** | Below threshold | Developing & Lower-Middle |
+| **D** | Very high inflation or unemployment | High-Inflation Vulnerable |
 
-Top breakpoints → 7 periods.
+These rules override pure SOM clusters to ensure **realistic economic classifications**.
 
-3. Country Grouping (Macro Groups A/B/C/D)
-Group	Criteria	Definition
-A	GDP/cap > 25,000	High-Income Advanced
-B	8,000–25,000 & stable inflation	Emerging & Upper Middle
-C	Else	Developing & Lower-Middle
-D	Very high inflation or unemployment	High-Inflation Vulnerable
+---
 
-These rules override pure SOM clusters → realistic classifications.
+### 4. Attribute Importance (ANOVA)
 
-4. Attribute Importance (ANOVA)
+Each of the **7 economic indicators** is ranked by:
 
-Each of the 7 indicators is ranked by:
+- **F-statistic** (between-group variance)
+- **Eta-squared** (effect size)
+- **Standardized range** (discriminative power)
 
-F-statistic
+This reveals which economic attributes best discriminate macro-groups in each period.
 
-Eta-squared
+---
 
-Standardized range
+## 🎨 Interactive Dashboard
 
-This reveals which economic attributes discriminate macro-groups in each period.
+**File:** `interactive_dashboard.html`
 
-🎨 Interactive Dashboard
+### Features:
 
-File: interactive_dashboard.html
+- 📊 **Period selector** (P1–P7)
+- 📈 **Macro-group distribution** bar chart
+- 🔍 **Attribute importance** visualization
+- 🌐 **Country list** with group highlights
+- 📉 **Group evolution** over time
+- 💹 **Economic indicator** comparisons
 
+Built fully in **HTML + CSS + Plotly** (no external frameworks required).
 
-interactive_dashboard
+---
 
-Features:
+## 🛠 How to Run
 
-Period selector (P1–P7)
+### 1. Install Dependencies
 
-Macro-group distribution bar chart
-
-Attribute importance visualization
-
-Country list with group highlights
-
-Group evolution over time
-
-Economic indicator comparisons
-
-Built fully in HTML + CSS + Plotly (no frameworks).
-
-🛠 How to Run
-Install dependencies:
+```bash
 pip install pandas numpy scipy minisom plotly
+```
 
-Run the SOM analysis:
+### 2. Run the SOM Analysis
+
+```bash
 python 5048_groupings_with_importance.py
+```
 
-Launch dashboard:
+This will:
+- Load and preprocess the data
+- Train the SOM model
+- Detect periods
+- Classify countries into groups
+- Calculate attribute importance
 
-Just open:
+### 3. Launch the Dashboard
 
-interactive_dashboard.html
+Simply open the file in any modern web browser:
 
-📝 Contribution Summary
+```bash
+# On macOS
+open interactive_dashboard.html
 
-From: 5048_Ting-Chen.docx
+# On Linux
+xdg-open interactive_dashboard.html
 
+# On Windows
+start interactive_dashboard.html
+```
 
-5048_Ting-Chen
+Or just **double-click** `interactive_dashboard.html`
 
-Task 1: Non-Visualisation
+---
 
-Data cleaning & preprocessing
+## 📊 Key Outputs
 
-SOM pipeline design & training
+The analysis produces:
 
-Period detection algorithm
+1. **Period boundaries** (2000–2024 divided into 7 periods)
+2. **Country classifications** (A/B/C/D groups per period)
+3. **Attribute importance rankings** (which indicators matter most)
+4. **Interactive visualizations** (exploration dashboard)
+5. **Temporal evolution patterns** (how countries transition between groups)
 
-Attribute importance analysis
+---
 
-Macro-group rule design
+## 📝 Contribution Summary
 
-All programming & debugging
+*From: `5048_Ting-Chen.docx`*
 
-Dashboard construction in HTML/CSS
+### Task 1: Non-Visualization
+- ✅ Data cleaning & preprocessing
+- ✅ SOM pipeline design & training
+- ✅ Period detection algorithm
+- ✅ Attribute importance analysis
+- ✅ Macro-group rule design
+- ✅ All programming & debugging
+- ✅ Dashboard construction in HTML/CSS
 
-Task 2: Visualisation
+### Task 2: Visualization
+- ✅ Period change-score charts
+- ✅ Silhouette-score visual justification
+- ✅ Attribute discriminative heatmap
+- ✅ Temporal stacked bar charts
+- ✅ Dashboard interaction design
+- ✅ HCI-based refinement (Fitts' Law, Info-Seeking Mantra)
 
-Period change-score charts
+---
 
-Silhouette-score visual justification
+## 📚 References
 
-Attribute discriminative heatmap
+Full references are included in the project report: `5048_Ting-Chen.docx`
 
-Temporal stacked bar charts
+Key methodologies:
+- Self-Organizing Maps (Kohonen, 1982)
+- Structural break detection
+- ANOVA-based feature importance
+- Interactive dashboard design principles
 
-Dashboard interaction design
+---
 
-HCI-based refinement (Fitts’ Law, Info-Seeking Mantra)
+## 🎓 Academic Context
 
-📚 References
+**Course:** COMP5048 – Visual Analytics  
+**Institution:** University of Sydney  
+**Year:** 2024  
+**Author:** Ting-Chen (Selina) Chen
 
-Full references included in report: 5048_Ting-Chen.docx
+---
 
+## 🎉 Acknowledgements
 
-5048_Ting-Chen
+This project was completed as part of COMP5048 – Visual Analytics at the University of Sydney. Special thanks to the course instructors and teaching team for their guidance on visual analytics methodologies and best practices.
 
-🎉 Acknowledgements
+---
 
-Project for COMP5048 – Visual Analytics, University of Sydney.
+## 📄 License
+
+This project is submitted as academic coursework for COMP5048. Please respect academic integrity policies when referencing or using this work.
+
+---
+
+## 📧 Contact
+
+For questions or collaboration opportunities, please refer to the course submission portal or contact through official university channels.
+
+---
+
+**⭐ If you find this project useful, please consider starring the repository!**
