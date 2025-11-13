@@ -1,0 +1,2731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Macro-Group Analysis Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.95;
+            margin-top: 10px;
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        
+        .period-selector {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .period-selector h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .periods {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .period-btn {
+            padding: 15px 25px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .period-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .period-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+            border-color: #764ba2;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+        }
+        
+        .chart-container h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .country-list {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+        }
+        
+        .country-list h3 {
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3em;
+            position: sticky;
+            top: 0;
+            background: white;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            z-index: 10;
+        }
+        
+        .group-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 12px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        
+        .group-section:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .group-header {
+            font-weight: 700;
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.05em;
+        }
+        
+        .group-badge {
+            background: rgba(255,255,255,0.3);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        .country-item {
+            padding: 10px 15px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #ddd;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .country-item:hover {
+            border-left-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #667eea;
+        }
+        
+        .metric-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .metric-value {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .importance-section {
+            margin-top: 30px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 1.1em;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+        
+        @media (max-width: 1200px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌍 Macro-Group Analysis Dashboard</h1>
+            <p>Interactive Economic Country Classification (2000-2024)</p>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-value">217</span>
+                    <span class="stat-label">Countries</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">7</span>
+                    <span class="stat-label">Time Periods</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">4</span>
+                    <span class="stat-label">Macro Groups</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">7</span>
+                    <span class="stat-label">Key Attributes</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="period-selector">
+            <h3>📅 Select Time Period</h3>
+            <div class="periods" id="periodButtons"></div>
+        </div>
+        
+        <div class="content">
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>📊 Country Distribution by Macro-Group</h3>
+                    <div id="barChart"></div>
+                </div>
+                
+                <div class="country-list">
+                    <h3>📋 Country Details</h3>
+                    <p style="color: #667; margin-bottom: 10px;">Click on a bar to filter countries by group</p>
+                    <div id="countryList"></div>
+                </div>
+            </div>
+            
+            <div class="importance-section">
+                <div class="chart-container">
+                    <h3>🎯 Attribute Importance Analysis</h3>
+                    <div id="importanceChart"></div>
+                </div>
+            </div>
+            
+            <div class="charts-grid" style="margin-top: 30px;">
+                <div class="chart-container">
+                    <h3>💰 Economic Indicators by Group</h3>
+                    <div id="metricsChart"></div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3>📈 Group Evolution Over Time</h3>
+                    <div id="evolutionChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Plotly -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    
+    <script>
+        // Dashboard data
+        const dashboardData = {
+  "periods": [
+    {
+      "id": 1,
+      "name": "Period 1 (2000-2004)",
+      "start": 2000,
+      "end": 2004
+    },
+    {
+      "id": 2,
+      "name": "Period 2 (2004-2006)",
+      "start": 2004,
+      "end": 2006
+    },
+    {
+      "id": 3,
+      "name": "Period 3 (2006-2009)",
+      "start": 2006,
+      "end": 2009
+    },
+    {
+      "id": 4,
+      "name": "Period 4 (2009-2010)",
+      "start": 2009,
+      "end": 2010
+    },
+    {
+      "id": 5,
+      "name": "Period 5 (2010-2016)",
+      "start": 2010,
+      "end": 2016
+    },
+    {
+      "id": 6,
+      "name": "Period 6 (2016-2023)",
+      "start": 2016,
+      "end": 2023
+    },
+    {
+      "id": 7,
+      "name": "Period 7 (2023-2024)",
+      "start": 2023,
+      "end": 2024
+    }
+  ],
+  "data": {
+    "1": [
+      {
+        "id": "A",
+        "name": "High-Income Advanced",
+        "count": 29,
+        "color": "#2E7D32",
+        "gdp": 32202.09842849342,
+        "inflation": 2.063750490457127,
+        "unemployment": 4.9831,
+        "trade": 80.7406926520506,
+        "countries": [
+          "Andorra",
+          "Austria",
+          "Bahamas, The",
+          "Belgium",
+          "Bermuda",
+          "Canada",
+          "Channel Islands",
+          "Denmark",
+          "Faroe Islands",
+          "Finland",
+          "France",
+          "Germany",
+          "Iceland",
+          "Ireland",
+          "Isle of Man",
+          "Japan",
+          "Liechtenstein",
+          "Luxembourg",
+          "Monaco",
+          "Netherlands",
+          "Norway",
+          "Qatar",
+          "San Marino",
+          "Sweden",
+          "Switzerland",
+          "United Arab Emirates",
+          "United Kingdom",
+          "United States",
+          "Virgin Islands (U.S.)"
+        ]
+      },
+      {
+        "id": "B",
+        "name": "Emerging & Upper-Middle Income",
+        "count": 35,
+        "color": "#1976D2",
+        "gdp": 17526.389510021956,
+        "inflation": 2.588735793559084,
+        "unemployment": 6.203,
+        "trade": 87.72481650527985,
+        "countries": [
+          "American Samoa",
+          "Antigua and Barbuda",
+          "Aruba",
+          "Australia",
+          "Bahrain",
+          "Barbados",
+          "Brunei Darussalam",
+          "Curacao",
+          "Cyprus",
+          "Czechia",
+          "French Polynesia",
+          "Greece",
+          "Greenland",
+          "Guam",
+          "Hong Kong SAR, China",
+          "Israel",
+          "Italy",
+          "Korea, Rep.",
+          "Kuwait",
+          "Macao SAR, China",
+          "Malta",
+          "New Caledonia",
+          "New Zealand",
+          "Northern Mariana Islands",
+          "Oman",
+          "Palau",
+          "Portugal",
+          "Puerto Rico (US)",
+          "Saudi Arabia",
+          "Seychelles",
+          "Singapore",
+          "Slovenia",
+          "Spain",
+          "St. Kitts and Nevis",
+          "Turks and Caicos Islands"
+        ]
+      },
+      {
+        "id": "C",
+        "name": "Developing & Lower-Middle Income",
+        "count": 112,
+        "color": "#F57C00",
+        "gdp": 930.9342753607002,
+        "inflation": 3.73807760861429,
+        "unemployment": 5.892799999999999,
+        "trade": 68.24985103089571,
+        "countries": [
+          "Afghanistan",
+          "Armenia",
+          "Azerbaijan",
+          "Bangladesh",
+          "Belarus",
+          "Belize",
+          "Benin",
+          "Bhutan",
+          "Bolivia",
+          "Brazil",
+          "Burkina Faso",
+          "Burundi",
+          "Cabo Verde",
+          "Cambodia",
+          "Cameroon",
+          "Central African Republic",
+          "Chad",
+          "Chile",
+          "China",
+          "Comoros",
+          "Congo, Dem. Rep.",
+          "Costa Rica",
+          "Cote d'Ivoire",
+          "Croatia",
+          "Cuba",
+          "Dominica",
+          "Egypt, Arab Rep.",
+          "El Salvador",
+          "Equatorial Guinea",
+          "Eritrea",
+          "Estonia",
+          "Ethiopia",
+          "Fiji",
+          "Gambia, The",
+          "Georgia",
+          "Grenada",
+          "Guatemala",
+          "Guinea",
+          "Guinea-Bissau",
+          "Guyana",
+          "Honduras",
+          "Hungary",
+          "India",
+          "Indonesia",
+          "Iran, Islamic Rep.",
+          "Iraq",
+          "Jamaica",
+          "Jordan",
+          "Kazakhstan",
+          "Kenya",
+          "Kiribati",
+          "Korea, Dem. People's Rep.",
+          "Kyrgyz Republic",
+          "Lao PDR",
+          "Latvia",
+          "Lebanon",
+          "Liberia",
+          "Lithuania",
+          "Madagascar",
+          "Malawi",
+          "Malaysia",
+          "Maldives",
+          "Mali",
+          "Marshall Islands",
+          "Mauritania",
+          "Mauritius",
+          "Mexico",
+          "Micronesia, Fed. Sts.",
+          "Moldova",
+          "Mongolia",
+          "Morocco",
+          "Mozambique",
+          "Myanmar",
+          "Nauru",
+          "Nepal",
+          "Nicaragua",
+          "Niger",
+          "Nigeria",
+          "Pakistan",
+          "Panama",
+          "Papua New Guinea",
+          "Paraguay",
+          "Peru",
+          "Philippines",
+          "Rwanda",
+          "Samoa",
+          "Senegal",
+          "Serbia",
+          "Sierra Leone",
+          "Solomon Islands",
+          "South Sudan",
+          "Sri Lanka",
+          "Suriname",
+          "Syrian Arab Republic",
+          "Tanzania",
+          "Thailand",
+          "Timor-Leste",
+          "Togo",
+          "Tonga",
+          "Trinidad and Tobago",
+          "Tunisia",
+          "Turkmenistan",
+          "Tuvalu",
+          "Uganda",
+          "Ukraine",
+          "Uruguay",
+          "Uzbekistan",
+          "Vanuatu",
+          "Viet Nam",
+          "Yemen, Rep.",
+          "Zambia",
+          "Zimbabwe"
+        ]
+      },
+      {
+        "id": "D",
+        "name": "High-Inflation Vulnerable",
+        "count": 35,
+        "color": "#C62828",
+        "gdp": 2232.027827484579,
+        "inflation": 9.485651443011935,
+        "unemployment": 17.755000000000003,
+        "trade": 72.91680110956517,
+        "countries": [
+          "Albania",
+          "Algeria",
+          "Angola",
+          "Argentina",
+          "Bosnia and Herzegovina",
+          "Botswana",
+          "Bulgaria",
+          "Colombia",
+          "Congo, Rep.",
+          "Djibouti",
+          "Dominican Republic",
+          "Ecuador",
+          "Eswatini",
+          "Gabon",
+          "Ghana",
+          "Haiti",
+          "Lesotho",
+          "Libya",
+          "Montenegro",
+          "Namibia",
+          "North Macedonia",
+          "Poland",
+          "Romania",
+          "Russian Federation",
+          "Sao Tome and Principe",
+          "Slovak Republic",
+          "Somalia, Fed. Rep.",
+          "South Africa",
+          "St. Lucia",
+          "St. Vincent and the Grenadines",
+          "Sudan",
+          "Tajikistan",
+          "Turkiye",
+          "Venezuela, RB",
+          "West Bank and Gaza"
+        ]
+      }
+    ],
+    "2": [
+      {
+        "id": "A",
+        "name": "High-Income Advanced",
+        "count": 42,
+        "color": "#2E7D32",
+        "gdp": 38610.56683802097,
+        "inflation": 2.00025160397534,
+        "unemployment": 5.175,
+        "trade": 86.67821048523574,
+        "countries": [
+          "Andorra",
+          "Australia",
+          "Austria",
+          "Bahamas, The",
+          "Belgium",
+          "Bermuda",
+          "Brunei Darussalam",
+          "Canada",
+          "Cayman Islands",
+          "Channel Islands",
+          "Cyprus",
+          "Denmark",
+          "Faroe Islands",
+          "Finland",
+          "France",
+          "Germany",
+          "Greenland",
+          "Hong Kong SAR, China",
+          "Iceland",
+          "Ireland",
+          "Isle of Man",
+          "Italy",
+          "Japan",
+          "Kuwait",
+          "Liechtenstein",
+          "Luxembourg",
+          "Macao SAR, China",
+          "Monaco",
+          "Netherlands",
+          "New Caledonia",
+          "New Zealand",
+          "Norway",
+          "Qatar",
+          "San Marino",
+          "Singapore",
+          "Spain",
+          "Sweden",
+          "Switzerland",
+          "United Arab Emirates",
+          "United Kingdom",
+          "United States",
+          "Virgin Islands (U.S.)"
+        ]
+      },
+      {
+        "id": "B",
+        "name": "Emerging & Upper-Middle Income",
+        "count": 29,
+        "color": "#1976D2",
+        "gdp": 15454.323283518504,
+        "inflation": 3.0243623957509533,
+        "unemployment": 7.441666666666666,
+        "trade": 120.91023485206166,
+        "countries": [
+          "American Samoa",
+          "Antigua and Barbuda",
+          "Aruba",
+          "Bahrain",
+          "Barbados",
+          "Croatia",
+          "Curacao",
+          "Czechia",
+          "Estonia",
+          "French Polynesia",
+          "Greece",
+          "Guam",
+          "Hungary",
+          "Israel",
+          "Korea, Rep.",
+          "Malta",
+          "Mexico",
+          "Northern Mariana Islands",
+          "Oman",
+          "Palau",
+          "Portugal",
+          "Puerto Rico (US)",
+          "Saudi Arabia",
+          "Seychelles",
+          "Slovak Republic",
+          "Slovenia",
+          "St. Kitts and Nevis",
+          "Trinidad and Tobago",
+          "Turks and Caicos Islands"
+        ]
+      },
+      {
+        "id": "C",
+        "name": "Developing & Lower-Middle Income",
+        "count": 116,
+        "color": "#F57C00",
+        "gdp": 1295.510405669455,
+        "inflation": 6.4923449461881,
+        "unemployment": 5.6339999999999995,
+        "trade": 71.54262485460691,
+        "countries": [
+          "Afghanistan",
+          "Argentina",
+          "Armenia",
+          "Azerbaijan",
+          "Bangladesh",
+          "Belarus",
+          "Belize",
+          "Benin",
+          "Bhutan",
+          "Bolivia",
+          "Brazil",
+          "Bulgaria",
+          "Burkina Faso",
+          "Burundi",
+          "Cabo Verde",
+          "Cambodia",
+          "Cameroon",
+          "Central African Republic",
+          "Chad",
+          "Chile",
+          "China",
+          "Colombia",
+          "Comoros",
+          "Congo, Dem. Rep.",
+          "Costa Rica",
+          "Cote d'Ivoire",
+          "Cuba",
+          "Dominica",
+          "Ecuador",
+          "Egypt, Arab Rep.",
+          "El Salvador",
+          "Equatorial Guinea",
+          "Eritrea",
+          "Ethiopia",
+          "Fiji",
+          "Gambia, The",
+          "Georgia",
+          "Grenada",
+          "Guatemala",
+          "Guinea",
+          "Guinea-Bissau",
+          "Guyana",
+          "Honduras",
+          "India",
+          "Indonesia",
+          "Iran, Islamic Rep.",
+          "Iraq",
+          "Jamaica",
+          "Jordan",
+          "Kazakhstan",
+          "Kenya",
+          "Kiribati",
+          "Korea, Dem. People's Rep.",
+          "Kosovo",
+          "Kyrgyz Republic",
+          "Lao PDR",
+          "Latvia",
+          "Lebanon",
+          "Liberia",
+          "Lithuania",
+          "Madagascar",
+          "Malawi",
+          "Malaysia",
+          "Maldives",
+          "Mali",
+          "Marshall Islands",
+          "Mauritania",
+          "Mauritius",
+          "Micronesia, Fed. Sts.",
+          "Moldova",
+          "Mongolia",
+          "Morocco",
+          "Mozambique",
+          "Myanmar",
+          "Nauru",
+          "Nepal",
+          "Nicaragua",
+          "Niger",
+          "Nigeria",
+          "Pakistan",
+          "Panama",
+          "Papua New Guinea",
+          "Paraguay",
+          "Peru",
+          "Philippines",
+          "Romania",
+          "Russian Federation",
+          "Rwanda",
+          "Samoa",
+          "Senegal",
+          "Sierra Leone",
+          "Solomon Islands",
+          "South Sudan",
+          "Sri Lanka",
+          "Suriname",
+          "Syrian Arab Republic",
+          "Tajikistan",
+          "Tanzania",
+          "Thailand",
+          "Timor-Leste",
+          "Togo",
+          "Tonga",
+          "Tunisia",
+          "Turkiye",
+          "Turkmenistan",
+          "Tuvalu",
+          "Uganda",
+          "Ukraine",
+          "Uruguay",
+          "Uzbekistan",
+          "Vanuatu",
+          "Venezuela, RB",
+          "Viet Nam",
+          "Yemen, Rep.",
+          "Zambia",
+          "Zimbabwe"
+        ]
+      },
+      {
+        "id": "D",
+        "name": "High-Inflation Vulnerable",
+        "count": 26,
+        "color": "#C62828",
+        "gdp": 2981.6452430375634,
+        "inflation": 4.96116689298915,
+        "unemployment": 18.886666666666667,
+        "trade": 82.5324727574689,
+        "countries": [
+          "Albania",
+          "Algeria",
+          "Angola",
+          "Bosnia and Herzegovina",
+          "Botswana",
+          "Congo, Rep.",
+          "Djibouti",
+          "Dominican Republic",
+          "Eswatini",
+          "Gabon",
+          "Ghana",
+          "Haiti",
+          "Lesotho",
+          "Libya",
+          "Montenegro",
+          "Namibia",
+          "North Macedonia",
+          "Poland",
+          "Sao Tome and Principe",
+          "Serbia",
+          "Somalia, Fed. Rep.",
+          "South Africa",
+          "St. Lucia",
+          "St. Vincent and the Grenadines",
+          "Sudan",
+          "West Bank and Gaza"
+        ]
+      }
+    ],
+    "3": [
+      {
+        "id": "A",
+        "name": "High-Income Advanced",
+        "count": 48,
+        "color": "#2E7D32",
+        "gdp": 44106.39180046819,
+        "inflation": 2.187173797944141,
+        "unemployment": 5.951625,
+        "trade": 86.90711751996086,
+        "countries": [
+          "Andorra",
+          "Aruba",
+          "Australia",
+          "Austria",
+          "Bahamas, The",
+          "Belgium",
+          "Bermuda",
+          "Brunei Darussalam",
+          "Canada",
+          "Cayman Islands",
+          "Channel Islands",
+          "Cyprus",
+          "Denmark",
+          "Faroe Islands",
+          "Finland",
+          "France",
+          "Germany",
+          "Greece",
+          "Greenland",
+          "Guam",
+          "Hong Kong SAR, China",
+          "Iceland",
+          "Ireland",
+          "Isle of Man",
+          "Israel",
+          "Italy",
+          "Japan",
+          "Kuwait",
+          "Liechtenstein",
+          "Luxembourg",
+          "Macao SAR, China",
+          "Monaco",
+          "Netherlands",
+          "New Caledonia",
+          "New Zealand",
+          "Norway",
+          "Qatar",
+          "San Marino",
+          "Singapore",
+          "Sint Maarten (Dutch part)",
+          "Spain",
+          "Sweden",
+          "Switzerland",
+          "Turks and Caicos Islands",
+          "United Arab Emirates",
+          "United Kingdom",
+          "United States",
+          "Virgin Islands (U.S.)"
+        ]
+      },
+      {
+        "id": "B",
+        "name": "Emerging & Upper-Middle Income",
+        "count": 34,
+        "color": "#1976D2",
+        "gdp": 15405.931353609602,
+        "inflation": 4.504663816755297,
+        "unemployment": 7.6515,
+        "trade": 102.83337629180352,
+        "countries": [
+          "American Samoa",
+          "Antigua and Barbuda",
+          "Bahrain",
+          "Barbados",
+          "Chile",
+          "Croatia",
+          "Curacao",
+          "Czechia",
+          "Equatorial Guinea",
+          "Estonia",
+          "French Polynesia",
+          "Hungary",
+          "Korea, Rep.",
+          "Latvia",
+          "Libya",
+          "Lithuania",
+          "Malta",
+          "Mexico",
+          "Northern Mariana Islands",
+          "Oman",
+          "Palau",
+          "Poland",
+          "Portugal",
+          "Puerto Rico (US)",
+          "Romania",
+          "Russian Federation",
+          "Saudi Arabia",
+          "Slovak Republic",
+          "Slovenia",
+          "St. Kitts and Nevis",
+          "St. Lucia",
+          "Trinidad and Tobago",
+          "Turkiye",
+          "Venezuela, RB"
+        ]
+      },
+      {
+        "id": "C",
+        "name": "Developing & Lower-Middle Income",
+        "count": 107,
+        "color": "#F57C00",
+        "gdp": 1707.698227606966,
+        "inflation": 7.353434151153998,
+        "unemployment": 5.19175,
+        "trade": 71.1890913601743,
+        "countries": [
+          "Afghanistan",
+          "Albania",
+          "Algeria",
+          "Argentina",
+          "Armenia",
+          "Azerbaijan",
+          "Bangladesh",
+          "Belarus",
+          "Belize",
+          "Benin",
+          "Bhutan",
+          "Bolivia",
+          "Brazil",
+          "Bulgaria",
+          "Burkina Faso",
+          "Burundi",
+          "Cabo Verde",
+          "Cambodia",
+          "Cameroon",
+          "Central African Republic",
+          "Chad",
+          "China",
+          "Colombia",
+          "Comoros",
+          "Congo, Dem. Rep.",
+          "Costa Rica",
+          "Cote d'Ivoire",
+          "Cuba",
+          "Dominica",
+          "Dominican Republic",
+          "Ecuador",
+          "Egypt, Arab Rep.",
+          "El Salvador",
+          "Eritrea",
+          "Fiji",
+          "Gambia, The",
+          "Ghana",
+          "Grenada",
+          "Guatemala",
+          "Guinea-Bissau",
+          "Guyana",
+          "Honduras",
+          "India",
+          "Indonesia",
+          "Iraq",
+          "Jamaica",
+          "Jordan",
+          "Kazakhstan",
+          "Kenya",
+          "Kiribati",
+          "Korea, Dem. People's Rep.",
+          "Kosovo",
+          "Kyrgyz Republic",
+          "Lao PDR",
+          "Lebanon",
+          "Liberia",
+          "Madagascar",
+          "Malawi",
+          "Malaysia",
+          "Maldives",
+          "Mali",
+          "Marshall Islands",
+          "Mauritania",
+          "Mauritius",
+          "Micronesia, Fed. Sts.",
+          "Moldova",
+          "Morocco",
+          "Mozambique",
+          "Myanmar",
+          "Nauru",
+          "Nepal",
+          "Nicaragua",
+          "Niger",
+          "Nigeria",
+          "Pakistan",
+          "Panama",
+          "Papua New Guinea",
+          "Paraguay",
+          "Peru",
+          "Philippines",
+          "Rwanda",
+          "Samoa",
+          "Senegal",
+          "Sierra Leone",
+          "Solomon Islands",
+          "South Sudan",
+          "Sri Lanka",
+          "Sudan",
+          "Suriname",
+          "Syrian Arab Republic",
+          "Tajikistan",
+          "Tanzania",
+          "Thailand",
+          "Timor-Leste",
+          "Togo",
+          "Tonga",
+          "Tunisia",
+          "Turkmenistan",
+          "Tuvalu",
+          "Uganda",
+          "Uruguay",
+          "Uzbekistan",
+          "Vanuatu",
+          "Viet Nam",
+          "Yemen, Rep.",
+          "Zambia",
+          "Zimbabwe"
+        ]
+      },
+      {
+        "id": "D",
+        "name": "High-Inflation Vulnerable",
+        "count": 25,
+        "color": "#C62828",
+        "gdp": 3112.292155087258,
+        "inflation": 8.394525868340274,
+        "unemployment": 17.960749999999997,
+        "trade": 89.71891701816965,
+        "countries": [
+          "Angola",
+          "Bosnia and Herzegovina",
+          "Botswana",
+          "Congo, Rep.",
+          "Djibouti",
+          "Eswatini",
+          "Ethiopia",
+          "Gabon",
+          "Georgia",
+          "Guinea",
+          "Haiti",
+          "Iran, Islamic Rep.",
+          "Lesotho",
+          "Mongolia",
+          "Montenegro",
+          "Namibia",
+          "North Macedonia",
+          "Sao Tome and Principe",
+          "Serbia",
+          "Seychelles",
+          "Somalia, Fed. Rep.",
+          "South Africa",
+          "St. Vincent and the Grenadines",
+          "Ukraine",
+          "West Bank and Gaza"
+        ]
+      }
+    ],
+    "4": [
+      {
+        "id": "A",
+        "name": "High-Income Advanced",
+        "count": 47,
+        "color": "#2E7D32",
+        "gdp": 44091.23433279683,
+        "inflation": 1.2198982313882825,
+        "unemployment": 7.391999999999999,
+        "trade": 83.5244694318169,
+        "countries": [
+          "Andorra",
+          "Australia",
+          "Austria",
+          "Bahamas, The",
+          "Belgium",
+          "Bermuda",
+          "Brunei Darussalam",
+          "Canada",
+          "Cayman Islands",
+          "Channel Islands",
+          "Cyprus",
+          "Denmark",
+          "Faroe Islands",
+          "Finland",
+          "France",
+          "Germany",
+          "Greece",
+          "Greenland",
+          "Guam",
+          "Hong Kong SAR, China",
+          "Iceland",
+          "Ireland",
+          "Isle of Man",
+          "Israel",
+          "Italy",
+          "Japan",
+          "Kuwait",
+          "Liechtenstein",
+          "Luxembourg",
+          "Macao SAR, China",
+          "Monaco",
+          "Netherlands",
+          "New Caledonia",
+          "New Zealand",
+          "Norway",
+          "Puerto Rico (US)",
+          "Qatar",
+          "San Marino",
+          "Singapore",
+          "Sint Maarten (Dutch part)",
+          "Spain",
+          "Sweden",
+          "Switzerland",
+          "United Arab Emirates",
+          "United Kingdom",
+          "United States",
+          "Virgin Islands (U.S.)"
+        ]
+      },
+      {
+        "id": "B",
+        "name": "Emerging & Upper-Middle Income",
+        "count": 39,
+        "color": "#1976D2",
+        "gdp": 14098.709496918707,
+        "inflation": 2.266379333701075,
+        "unemployment": 8.1795,
+        "trade": 94.0072449782742,
+        "countries": [
+          "American Samoa",
+          "Antigua and Barbuda",
+          "Argentina",
+          "Aruba",
+          "Bahrain",
+          "Barbados",
+          "Brazil",
+          "Chile",
+          "Croatia",
+          "Curacao",
+          "Czechia",
+          "Equatorial Guinea",
+          "Estonia",
+          "French Polynesia",
+          "Hungary",
+          "Korea, Rep.",
+          "Latvia",
+          "Libya",
+          "Lithuania",
+          "Malta",
+          "Mexico",
+          "Northern Mariana Islands",
+          "Oman",
+          "Palau",
+          "Panama",
+          "Poland",
+          "Portugal",
+          "Romania",
+          "Russian Federation",
+          "Saudi Arabia",
+          "Slovak Republic",
+          "Slovenia",
+          "St. Kitts and Nevis",
+          "St. Lucia",
+          "Trinidad and Tobago",
+          "Turkiye",
+          "Turks and Caicos Islands",
+          "Uruguay",
+          "Venezuela, RB"
+        ]
+      },
+      {
+        "id": "C",
+        "name": "Developing & Lower-Middle Income",
+        "count": 109,
+        "color": "#F57C00",
+        "gdp": 1919.3420692534664,
+        "inflation": 3.6215547625016704,
+        "unemployment": 5.02325,
+        "trade": 71.6809596749255,
+        "countries": [
+          "Afghanistan",
+          "Albania",
+          "Algeria",
+          "Azerbaijan",
+          "Bangladesh",
+          "Belarus",
+          "Belize",
+          "Benin",
+          "Bhutan",
+          "Bolivia",
+          "Bulgaria",
+          "Burkina Faso",
+          "Burundi",
+          "Cabo Verde",
+          "Cambodia",
+          "Cameroon",
+          "Central African Republic",
+          "Chad",
+          "China",
+          "Colombia",
+          "Comoros",
+          "Congo, Dem. Rep.",
+          "Costa Rica",
+          "Cote d'Ivoire",
+          "Cuba",
+          "Dominica",
+          "Dominican Republic",
+          "Ecuador",
+          "Egypt, Arab Rep.",
+          "El Salvador",
+          "Eritrea",
+          "Ethiopia",
+          "Fiji",
+          "Gambia, The",
+          "Ghana",
+          "Grenada",
+          "Guatemala",
+          "Guinea",
+          "Guinea-Bissau",
+          "Guyana",
+          "Honduras",
+          "India",
+          "Indonesia",
+          "Iran, Islamic Rep.",
+          "Iraq",
+          "Jamaica",
+          "Jordan",
+          "Kazakhstan",
+          "Kenya",
+          "Kiribati",
+          "Korea, Dem. People's Rep.",
+          "Kosovo",
+          "Kyrgyz Republic",
+          "Lao PDR",
+          "Lebanon",
+          "Liberia",
+          "Madagascar",
+          "Malawi",
+          "Malaysia",
+          "Maldives",
+          "Mali",
+          "Marshall Islands",
+          "Mauritania",
+          "Mauritius",
+          "Micronesia, Fed. Sts.",
+          "Moldova",
+          "Mongolia",
+          "Morocco",
+          "Mozambique",
+          "Myanmar",
+          "Nauru",
+          "Nepal",
+          "Nicaragua",
+          "Niger",
+          "Nigeria",
+          "Pakistan",
+          "Papua New Guinea",
+          "Paraguay",
+          "Peru",
+          "Philippines",
+          "Rwanda",
+          "Samoa",
+          "Sao Tome and Principe",
+          "Senegal",
+          "Seychelles",
+          "Sierra Leone",
+          "Solomon Islands",
+          "South Sudan",
+          "Sri Lanka",
+          "Sudan",
+          "Suriname",
+          "Syrian Arab Republic",
+          "Tajikistan",
+          "Tanzania",
+          "Thailand",
+          "Timor-Leste",
+          "Togo",
+          "Tonga",
+          "Tunisia",
+          "Turkmenistan",
+          "Tuvalu",
+          "Uganda",
+          "Ukraine",
+          "Uzbekistan",
+          "Vanuatu",
+          "Viet Nam",
+          "Yemen, Rep.",
+          "Zambia",
+          "Zimbabwe"
+        ]
+      },
+      {
+        "id": "D",
+        "name": "High-Inflation Vulnerable",
+        "count": 19,
+        "color": "#C62828",
+        "gdp": 3596.6980259322977,
+        "inflation": 3.251546063401255,
+        "unemployment": 19.676,
+        "trade": 86.33112007419945,
+        "countries": [
+          "Angola",
+          "Armenia",
+          "Bosnia and Herzegovina",
+          "Botswana",
+          "Congo, Rep.",
+          "Djibouti",
+          "Eswatini",
+          "Gabon",
+          "Georgia",
+          "Haiti",
+          "Lesotho",
+          "Montenegro",
+          "Namibia",
+          "North Macedonia",
+          "Serbia",
+          "Somalia, Fed. Rep.",
+          "South Africa",
+          "St. Vincent and the Grenadines",
+          "West Bank and Gaza"
+        ]
+      }
+    ],
+    "5": [
+      {
+        "id": "A",
+        "name": "High-Income Advanced",
+        "count": 49,
+        "color": "#2E7D32",
+        "gdp": 47169.934668711496,
+        "inflation": 1.5331432309434403,
+        "unemployment": 6.642857142857142,
+        "trade": 96.71128090343956,
+        "countries": [
+          "Andorra",
+          "Aruba",
+          "Australia",
+          "Austria",
+          "Bahamas, The",
+          "Belgium",
+          "Bermuda",
+          "Brunei Darussalam",
+          "Canada",
+          "Cayman Islands",
+          "Channel Islands",
+          "Cyprus",
+          "Denmark",
+          "Faroe Islands",
+          "Finland",
+          "France",
+          "Germany",
+          "Greenland",
+          "Guam",
+          "Hong Kong SAR, China",
+          "Iceland",
+          "Ireland",
+          "Isle of Man",
+          "Israel",
+          "Italy",
+          "Japan",
+          "Korea, Rep.",
+          "Kuwait",
+          "Liechtenstein",
+          "Luxembourg",
+          "Macao SAR, China",
+          "Monaco",
+          "Netherlands",
+          "New Caledonia",
+          "New Zealand",
+          "Norway",
+          "Puerto Rico (US)",
+          "Qatar",
+          "San Marino",
+          "Saudi Arabia",
+          "Singapore",
+          "Sint Maarten (Dutch part)",
+          "Spain",
+          "Sweden",
+          "Switzerland",
+          "United Arab Emirates",
+          "United Kingdom",
+          "United States",
+          "Virgin Islands (U.S.)"
+        ]
+      },
+      {
+        "id": "B",
+        "name": "Emerging & Upper-Middle Income",
+        "count": 44,
+        "color": "#1976D2",
+        "gdp": 13680.913073407253,
+        "inflation": 2.2800063096227428,
+        "unemployment": 8.319,
+        "trade": 111.43070757367104,
+        "countries": [
+          "American Samoa",
+          "Antigua and Barbuda",
+          "Argentina",
+          "Bahrain",
+          "Barbados",
+          "Brazil",
+          "Chile",
+          "Costa Rica",
+          "Croatia",
+          "Curacao",
+          "Czechia",
+          "Equatorial Guinea",
+          "Estonia",
+          "French Polynesia",
+          "Gabon",
+          "Greece",
+          "Hungary",
+          "Kazakhstan",
+          "Latvia",
+          "Libya",
+          "Lithuania",
+          "Malaysia",
+          "Maldives",
+          "Malta",
+          "Mauritius",
+          "Mexico",
+          "Northern Mariana Islands",
+          "Oman",
+          "Palau",
+          "Panama",
+          "Poland",
+          "Portugal",
+          "Romania",
+          "Russian Federation",
+          "Seychelles",
+          "Slovak Republic",
+          "Slovenia",
+          "St. Kitts and Nevis",
+          "St. Lucia",
+          "St. Martin (French part)",
+          "Trinidad and Tobago",
+          "Turkiye",
+          "Turks and Caicos Islands",
+          "Uruguay"
+        ]
+      },
+      {
+        "id": "C",
+        "name": "Developing & Lower-Middle Income",
+        "count": 96,
+        "color": "#F57C00",
+        "gdp": 2129.2851101784377,
+        "inflation": 4.454513906907239,
+        "unemployment": 4.438428571428571,
+        "trade": 68.55001235547861,
+        "countries": [
+          "Afghanistan",
+          "Algeria",
+          "Azerbaijan",
+          "Bangladesh",
+          "Belize",
+          "Benin",
+          "Bhutan",
+          "Bolivia",
+          "Bulgaria",
+          "Burkina Faso",
+          "Burundi",
+          "Cabo Verde",
+          "Cambodia",
+          "Cameroon",
+          "Central African Republic",
+          "Chad",
+          "China",
+          "Colombia",
+          "Comoros",
+          "Congo, Dem. Rep.",
+          "Cote d'Ivoire",
+          "Cuba",
+          "Dominica",
+          "Dominican Republic",
+          "Ecuador",
+          "Egypt, Arab Rep.",
+          "El Salvador",
+          "Eritrea",
+          "Ethiopia",
+          "Fiji",
+          "Gambia, The",
+          "Ghana",
+          "Grenada",
+          "Guatemala",
+          "Guinea",
+          "Guinea-Bissau",
+          "Guyana",
+          "Haiti",
+          "Honduras",
+          "India",
+          "Indonesia",
+          "Iraq",
+          "Jamaica",
+          "Jordan",
+          "Kenya",
+          "Kiribati",
+          "Korea, Dem. People's Rep.",
+          "Kosovo",
+          "Kyrgyz Republic",
+          "Lao PDR",
+          "Lebanon",
+          "Liberia",
+          "Madagascar",
+          "Mali",
+          "Marshall Islands",
+          "Mauritania",
+          "Micronesia, Fed. Sts.",
+          "Moldova",
+          "Mongolia",
+          "Morocco",
+          "Mozambique",
+          "Myanmar",
+          "Nauru",
+          "Nepal",
+          "Nicaragua",
+          "Niger",
+          "Nigeria",
+          "Pakistan",
+          "Papua New Guinea",
+          "Paraguay",
+          "Peru",
+          "Philippines",
+          "Rwanda",
+          "Samoa",
+          "Sao Tome and Principe",
+          "Senegal",
+          "Sierra Leone",
+          "Solomon Islands",
+          "Sri Lanka",
+          "Suriname",
+          "Tajikistan",
+          "Tanzania",
+          "Thailand",
+          "Timor-Leste",
+          "Togo",
+          "Tonga",
+          "Turkmenistan",
+          "Tuvalu",
+          "Uganda",
+          "Ukraine",
+          "Uzbekistan",
+          "Vanuatu",
+          "Viet Nam",
+          "Yemen, Rep.",
+          "Zambia",
+          "Zimbabwe"
+        ]
+      },
+      {
+        "id": "D",
+        "name": "High-Inflation Vulnerable",
+        "count": 26,
+        "color": "#C62828",
+        "gdp": 4225.975013337196,
+        "inflation": 5.2716744135142095,
+        "unemployment": 18.449642857142855,
+        "trade": 86.24548031350858,
+        "countries": [
+          "Albania",
+          "Angola",
+          "Armenia",
+          "Belarus",
+          "Bosnia and Herzegovina",
+          "Botswana",
+          "Congo, Rep.",
+          "Djibouti",
+          "Eswatini",
+          "Georgia",
+          "Iran, Islamic Rep.",
+          "Lesotho",
+          "Malawi",
+          "Montenegro",
+          "Namibia",
+          "North Macedonia",
+          "Serbia",
+          "Somalia, Fed. Rep.",
+          "South Africa",
+          "South Sudan",
+          "St. Vincent and the Grenadines",
+          "Sudan",
+          "Syrian Arab Republic",
+          "Tunisia",
+          "Venezuela, RB",
+          "West Bank and Gaza"
+        ]
+      }
+    ],
+    "6": [
+      {
+        "id": "A",
+        "name": "High-Income Advanced",
+        "count": 53,
+        "color": "#2E7D32",
+        "gdp": 47733.22955538022,
+        "inflation": 2.191335583832255,
+        "unemployment": 5.187,
+        "trade": 92.32852454535112,
+        "countries": [
+          "Andorra",
+          "Aruba",
+          "Australia",
+          "Austria",
+          "Bahamas, The",
+          "Bahrain",
+          "Belgium",
+          "Bermuda",
+          "Brunei Darussalam",
+          "Canada",
+          "Cayman Islands",
+          "Channel Islands",
+          "Cyprus",
+          "Denmark",
+          "Faroe Islands",
+          "Finland",
+          "France",
+          "Germany",
+          "Greenland",
+          "Guam",
+          "Hong Kong SAR, China",
+          "Iceland",
+          "Ireland",
+          "Isle of Man",
+          "Israel",
+          "Italy",
+          "Japan",
+          "Korea, Rep.",
+          "Kuwait",
+          "Liechtenstein",
+          "Luxembourg",
+          "Macao SAR, China",
+          "Malta",
+          "Monaco",
+          "Netherlands",
+          "New Caledonia",
+          "New Zealand",
+          "Norway",
+          "Puerto Rico (US)",
+          "Qatar",
+          "San Marino",
+          "Saudi Arabia",
+          "Singapore",
+          "Sint Maarten (Dutch part)",
+          "Slovenia",
+          "Spain",
+          "Sweden",
+          "Switzerland",
+          "Turks and Caicos Islands",
+          "United Arab Emirates",
+          "United Kingdom",
+          "United States",
+          "Virgin Islands (U.S.)"
+        ]
+      },
+      {
+        "id": "B",
+        "name": "Emerging & Upper-Middle Income",
+        "count": 46,
+        "color": "#1976D2",
+        "gdp": 15168.477607255114,
+        "inflation": 3.7261204372617485,
+        "unemployment": 6.96525,
+        "trade": 105.57936702402112,
+        "countries": [
+          "American Samoa",
+          "Antigua and Barbuda",
+          "Barbados",
+          "Brazil",
+          "Bulgaria",
+          "Chile",
+          "China",
+          "Costa Rica",
+          "Croatia",
+          "Cuba",
+          "Curacao",
+          "Czechia",
+          "Dominica",
+          "Dominican Republic",
+          "Estonia",
+          "French Polynesia",
+          "Greece",
+          "Grenada",
+          "Guyana",
+          "Hungary",
+          "Kazakhstan",
+          "Latvia",
+          "Lithuania",
+          "Malaysia",
+          "Maldives",
+          "Mauritius",
+          "Mexico",
+          "Montenegro",
+          "Nauru",
+          "Northern Mariana Islands",
+          "Oman",
+          "Palau",
+          "Panama",
+          "Poland",
+          "Portugal",
+          "Romania",
+          "Russian Federation",
+          "Serbia",
+          "Seychelles",
+          "Slovak Republic",
+          "St. Kitts and Nevis",
+          "St. Lucia",
+          "St. Martin (French part)",
+          "St. Vincent and the Grenadines",
+          "Trinidad and Tobago",
+          "Uruguay"
+        ]
+      },
+      {
+        "id": "C",
+        "name": "Developing & Lower-Middle Income",
+        "count": 81,
+        "color": "#F57C00",
+        "gdp": 2283.977910060919,
+        "inflation": 4.308040486859646,
+        "unemployment": 4.4295625,
+        "trade": 68.95187127493364,
+        "countries": [
+          "Afghanistan",
+          "Albania",
+          "Algeria",
+          "Azerbaijan",
+          "Bangladesh",
+          "Belarus",
+          "Belize",
+          "Benin",
+          "Bhutan",
+          "Bolivia",
+          "Burkina Faso",
+          "Burundi",
+          "Cabo Verde",
+          "Cambodia",
+          "Cameroon",
+          "Central African Republic",
+          "Chad",
+          "Colombia",
+          "Comoros",
+          "Congo, Dem. Rep.",
+          "Cote d'Ivoire",
+          "Ecuador",
+          "El Salvador",
+          "Equatorial Guinea",
+          "Eritrea",
+          "Fiji",
+          "Gambia, The",
+          "Georgia",
+          "Guatemala",
+          "Guinea",
+          "Guinea-Bissau",
+          "Honduras",
+          "India",
+          "Indonesia",
+          "Iraq",
+          "Jamaica",
+          "Kenya",
+          "Kiribati",
+          "Korea, Dem. People's Rep.",
+          "Kosovo",
+          "Kyrgyz Republic",
+          "Lao PDR",
+          "Liberia",
+          "Madagascar",
+          "Mali",
+          "Marshall Islands",
+          "Mauritania",
+          "Micronesia, Fed. Sts.",
+          "Moldova",
+          "Mongolia",
+          "Morocco",
+          "Mozambique",
+          "Myanmar",
+          "Nepal",
+          "Nicaragua",
+          "Niger",
+          "Pakistan",
+          "Papua New Guinea",
+          "Paraguay",
+          "Peru",
+          "Philippines",
+          "Rwanda",
+          "Samoa",
+          "Sao Tome and Principe",
+          "Senegal",
+          "Solomon Islands",
+          "Sri Lanka",
+          "Tajikistan",
+          "Tanzania",
+          "Thailand",
+          "Timor-Leste",
+          "Togo",
+          "Tonga",
+          "Turkmenistan",
+          "Tuvalu",
+          "Uganda",
+          "Ukraine",
+          "Uzbekistan",
+          "Vanuatu",
+          "Viet Nam",
+          "Zambia"
+        ]
+      },
+      {
+        "id": "D",
+        "name": "High-Inflation Vulnerable",
+        "count": 35,
+        "color": "#C62828",
+        "gdp": 3563.1524661133785,
+        "inflation": 15.614237445850168,
+        "unemployment": 15.988,
+        "trade": 74.50226010232046,
+        "countries": [
+          "Angola",
+          "Argentina",
+          "Armenia",
+          "Bosnia and Herzegovina",
+          "Botswana",
+          "Congo, Rep.",
+          "Djibouti",
+          "Egypt, Arab Rep.",
+          "Eswatini",
+          "Ethiopia",
+          "Gabon",
+          "Ghana",
+          "Haiti",
+          "Iran, Islamic Rep.",
+          "Jordan",
+          "Lebanon",
+          "Lesotho",
+          "Libya",
+          "Malawi",
+          "Namibia",
+          "Nigeria",
+          "North Macedonia",
+          "Sierra Leone",
+          "Somalia, Fed. Rep.",
+          "South Africa",
+          "South Sudan",
+          "Sudan",
+          "Suriname",
+          "Syrian Arab Republic",
+          "Tunisia",
+          "Turkiye",
+          "Venezuela, RB",
+          "West Bank and Gaza",
+          "Yemen, Rep.",
+          "Zimbabwe"
+        ]
+      }
+    ],
+    "7": [
+      {
+        "id": "A",
+        "name": "High-Income Advanced",
+        "count": 53,
+        "color": "#2E7D32",
+        "gdp": 52306.28459317332,
+        "inflation": 3.43870334399951,
+        "unemployment": 4.0765,
+        "trade": 109.72531360805024,
+        "countries": [
+          "Andorra",
+          "Aruba",
+          "Australia",
+          "Austria",
+          "Bahamas, The",
+          "Bahrain",
+          "Belgium",
+          "Bermuda",
+          "Brunei Darussalam",
+          "Canada",
+          "Cayman Islands",
+          "Channel Islands",
+          "Cyprus",
+          "Czechia",
+          "Denmark",
+          "Estonia",
+          "Faroe Islands",
+          "Finland",
+          "France",
+          "Germany",
+          "Greenland",
+          "Hong Kong SAR, China",
+          "Iceland",
+          "Ireland",
+          "Israel",
+          "Italy",
+          "Japan",
+          "Korea, Rep.",
+          "Kuwait",
+          "Liechtenstein",
+          "Lithuania",
+          "Luxembourg",
+          "Macao SAR, China",
+          "Malta",
+          "Monaco",
+          "Netherlands",
+          "New Zealand",
+          "Norway",
+          "Portugal",
+          "Puerto Rico (US)",
+          "Qatar",
+          "Saudi Arabia",
+          "Singapore",
+          "Sint Maarten (Dutch part)",
+          "Slovak Republic",
+          "Slovenia",
+          "Spain",
+          "Sweden",
+          "Switzerland",
+          "Turks and Caicos Islands",
+          "United Arab Emirates",
+          "United Kingdom",
+          "United States"
+        ]
+      },
+      {
+        "id": "B",
+        "name": "Emerging & Upper-Middle Income",
+        "count": 46,
+        "color": "#1976D2",
+        "gdp": 13927.855694134943,
+        "inflation": 4.09614228377911,
+        "unemployment": 6.56175,
+        "trade": 99.79592280336354,
+        "countries": [
+          "Albania",
+          "Antigua and Barbuda",
+          "Armenia",
+          "Barbados",
+          "Belarus",
+          "Bosnia and Herzegovina",
+          "Brazil",
+          "Bulgaria",
+          "Chile",
+          "China",
+          "Costa Rica",
+          "Croatia",
+          "Curacao",
+          "Dominica",
+          "Dominican Republic",
+          "French Polynesia",
+          "Gabon",
+          "Georgia",
+          "Greece",
+          "Grenada",
+          "Guyana",
+          "Hungary",
+          "Kazakhstan",
+          "Latvia",
+          "Malaysia",
+          "Maldives",
+          "Mauritius",
+          "Mexico",
+          "Montenegro",
+          "Nauru",
+          "North Macedonia",
+          "Oman",
+          "Palau",
+          "Panama",
+          "Peru",
+          "Poland",
+          "Romania",
+          "Russian Federation",
+          "Serbia",
+          "Seychelles",
+          "St. Kitts and Nevis",
+          "St. Lucia",
+          "St. Vincent and the Grenadines",
+          "Trinidad and Tobago",
+          "Turkmenistan",
+          "Uruguay"
+        ]
+      },
+      {
+        "id": "C",
+        "name": "Developing & Lower-Middle Income",
+        "count": 80,
+        "color": "#F57C00",
+        "gdp": 2592.097596671475,
+        "inflation": 5.04705107670578,
+        "unemployment": 4.39425,
+        "trade": 67.43065885503009,
+        "countries": [
+          "Afghanistan",
+          "Algeria",
+          "Azerbaijan",
+          "Bangladesh",
+          "Belize",
+          "Benin",
+          "Bhutan",
+          "Bolivia",
+          "Burkina Faso",
+          "Cabo Verde",
+          "Cambodia",
+          "Cameroon",
+          "Central African Republic",
+          "Chad",
+          "Colombia",
+          "Comoros",
+          "Congo, Dem. Rep.",
+          "Cote d'Ivoire",
+          "Cuba",
+          "Ecuador",
+          "El Salvador",
+          "Equatorial Guinea",
+          "Eritrea",
+          "Fiji",
+          "Gambia, The",
+          "Guam",
+          "Guatemala",
+          "Guinea",
+          "Guinea-Bissau",
+          "Honduras",
+          "India",
+          "Indonesia",
+          "Jamaica",
+          "Kenya",
+          "Kiribati",
+          "Korea, Dem. People's Rep.",
+          "Kosovo",
+          "Kyrgyz Republic",
+          "Liberia",
+          "Madagascar",
+          "Mali",
+          "Marshall Islands",
+          "Mauritania",
+          "Micronesia, Fed. Sts.",
+          "Moldova",
+          "Mongolia",
+          "Morocco",
+          "Mozambique",
+          "Myanmar",
+          "Nepal",
+          "New Caledonia",
+          "Nicaragua",
+          "Niger",
+          "Papua New Guinea",
+          "Paraguay",
+          "Philippines",
+          "Rwanda",
+          "Samoa",
+          "San Marino",
+          "Senegal",
+          "Solomon Islands",
+          "Sri Lanka",
+          "Sudan",
+          "Syrian Arab Republic",
+          "Tajikistan",
+          "Tanzania",
+          "Thailand",
+          "Timor-Leste",
+          "Togo",
+          "Tonga",
+          "Tuvalu",
+          "Uganda",
+          "Ukraine",
+          "Uzbekistan",
+          "Vanuatu",
+          "Venezuela, RB",
+          "Viet Nam",
+          "Virgin Islands (U.S.)",
+          "Zambia",
+          "Zimbabwe"
+        ]
+      },
+      {
+        "id": "D",
+        "name": "High-Inflation Vulnerable",
+        "count": 32,
+        "color": "#C62828",
+        "gdp": 3397.1167961085453,
+        "inflation": 25.62828693564945,
+        "unemployment": 12.477,
+        "trade": 67.8894433198796,
+        "countries": [
+          "Angola",
+          "Argentina",
+          "Botswana",
+          "Burundi",
+          "Congo, Rep.",
+          "Djibouti",
+          "Egypt, Arab Rep.",
+          "Eswatini",
+          "Ethiopia",
+          "Ghana",
+          "Haiti",
+          "Iran, Islamic Rep.",
+          "Iraq",
+          "Jordan",
+          "Lao PDR",
+          "Lebanon",
+          "Lesotho",
+          "Libya",
+          "Malawi",
+          "Namibia",
+          "Nigeria",
+          "Pakistan",
+          "Sao Tome and Principe",
+          "Sierra Leone",
+          "Somalia, Fed. Rep.",
+          "South Africa",
+          "South Sudan",
+          "Suriname",
+          "Tunisia",
+          "Turkiye",
+          "West Bank and Gaza",
+          "Yemen, Rep."
+        ]
+      }
+    ]
+  }
+};
+        
+        // Importance data
+        const importanceData = [
+  {
+    "attribute": "gdp_per_capita_log",
+    "importance_score": 79.07166848067894,
+    "variance_explained_pct": 76.53495252463328,
+    "f_statistic": 225.8314376237845,
+    "avg_rank": 1
+  },
+  {
+    "attribute": "unemployment_pct",
+    "importance_score": 47.56928556384576,
+    "variance_explained_pct": 45.41419105691936,
+    "f_statistic": 53.59558924249262,
+    "avg_rank": 2
+  },
+  {
+    "attribute": "inflation_cpi_pct",
+    "importance_score": 20.857275719928364,
+    "variance_explained_pct": 23.58435424186515,
+    "f_statistic": 14.598167940493733,
+    "avg_rank": 3
+  },
+  {
+    "attribute": "gdp_total_log",
+    "importance_score": 11.119179011390258,
+    "variance_explained_pct": 10.793223678803333,
+    "f_statistic": 8.32311169798909,
+    "avg_rank": 4
+  },
+  {
+    "attribute": "trade_pct_gdp",
+    "importance_score": 10.319659688772314,
+    "variance_explained_pct": 10.78848521199,
+    "f_statistic": 7.182093360205556,
+    "avg_rank": 5
+  },
+  {
+    "attribute": "current_account_pct_gdp",
+    "importance_score": 8.620156759508543,
+    "variance_explained_pct": 8.353974098053248,
+    "f_statistic": 5.493101894961155,
+    "avg_rank": 6
+  },
+  {
+    "attribute": "fdi_net_inflows_pct_gdp",
+    "importance_score": 5.268011849390789,
+    "variance_explained_pct": 4.522035710579507,
+    "f_statistic": 3.014839401468194,
+    "avg_rank": 7
+  }
+];
+        
+        // Track selected period and group
+        let currentPeriod = 1;
+        let selectedGroup = null;
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            createPeriodButtons();
+            updateDashboard(1);
+            createImportanceChart();
+            createEvolutionChart();
+        });
+        
+        // Create period selector buttons
+        function createPeriodButtons() {
+            const container = document.getElementById('periodButtons');
+            dashboardData.periods.forEach(period => {
+                const btn = document.createElement('button');
+                btn.className = 'period-btn';
+                btn.textContent = period.name;
+                btn.onclick = () => selectPeriod(period.id);
+                if (period.id === 1) btn.classList.add('active');
+                container.appendChild(btn);
+            });
+        }
+        
+        // Select period
+        function selectPeriod(periodId) {
+            currentPeriod = periodId;
+            selectedGroup = null;
+            
+            // Update button states
+            document.querySelectorAll('.period-btn').forEach((btn, idx) => {
+                if (idx + 1 === periodId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            updateDashboard(periodId);
+        }
+        
+        // Update dashboard for selected period
+        function updateDashboard(periodId) {
+            const periodData = dashboardData.data[periodId.toString()];
+            createBarChart(periodData);
+            createMetricsChart(periodData);
+            showAllCountries(periodData);
+        }
+        
+        // Create bar chart
+        function createBarChart(periodData) {
+            const groups = periodData.map(d => d.name);
+            const counts = periodData.map(d => d.count);
+            const colors = periodData.map(d => d.color);
+            
+            const trace = {
+                x: groups,
+                y: counts,
+                type: 'bar',
+                marker: {
+                    color: colors,
+                    line: {
+                        color: 'rgba(0,0,0,0.2)',
+                        width: 2
+                    }
+                },
+                text: counts.map(c => c.toString()),
+                textposition: 'outside',
+                textfont: {
+                    size: 14,
+                    weight: 'bold'
+                },
+                hovertemplate: '<b>%{x}</b><br>Countries: %{y}<extra></extra>'
+            };
+            
+            const layout = {
+                margin: { t: 20, b: 100, l: 60, r: 20 },
+                xaxis: {
+                    tickangle: -45,
+                    tickfont: { size: 11 }
+                },
+                yaxis: {
+                    title: 'Number of Countries',
+                    titlefont: { size: 13 },
+                    gridcolor: '#f0f0f0'
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                height: 400,
+                font: { family: 'Arial, sans-serif' }
+            };
+            
+            const config = {
+                responsive: true,
+                displayModeBar: false
+            };
+            
+            Plotly.newPlot('barChart', [trace], layout, config);
+            
+            // Add click handler
+            document.getElementById('barChart').on('plotly_click', function(data) {
+                const groupName = data.points[0].x;
+                const group = periodData.find(g => g.name === groupName);
+                selectedGroup = group.id;
+                showCountriesForGroup(group);
+            });
+        }
+        
+        // Create metrics chart
+        function createMetricsChart(periodData) {
+            const groups = periodData.map(d => d.name.split(' ')[0]); // Shortened names
+            
+            const trace1 = {
+                x: groups,
+                y: periodData.map(d => d.gdp),
+                name: 'GDP per Capita',
+                type: 'bar',
+                marker: { color: '#667eea' },
+                yaxis: 'y',
+                hovertemplate: '<b>%{x}</b><br>GDP: $%{y:,.0f}<extra></extra>'
+            };
+            
+            const trace2 = {
+                x: groups,
+                y: periodData.map(d => d.inflation),
+                name: 'Inflation Rate',
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { 
+                    color: '#f57c00',
+                    size: 10
+                },
+                line: {
+                    color: '#f57c00',
+                    width: 3
+                },
+                yaxis: 'y2',
+                hovertemplate: '<b>%{x}</b><br>Inflation: %{y:.2f}%<extra></extra>'
+            };
+            
+            const layout = {
+                margin: { t: 20, b: 80, l: 60, r: 60 },
+                xaxis: {
+                    tickangle: -45,
+                    tickfont: { size: 11 }
+                },
+                yaxis: {
+                    title: 'GDP per Capita (USD)',
+                    titlefont: { color: '#667eea', size: 12 },
+                    tickfont: { color: '#667eea' },
+                    gridcolor: '#f0f0f0'
+                },
+                yaxis2: {
+                    title: 'Inflation Rate (%)',
+                    titlefont: { color: '#f57c00', size: 12 },
+                    tickfont: { color: '#f57c00' },
+                    overlaying: 'y',
+                    side: 'right'
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                height: 400,
+                showlegend: true,
+                legend: {
+                    x: 0.02,
+                    y: 0.98,
+                    bgcolor: 'rgba(255,255,255,0.9)',
+                    bordercolor: '#ddd',
+                    borderwidth: 1
+                },
+                font: { family: 'Arial, sans-serif' }
+            };
+            
+            const config = {
+                responsive: true,
+                displayModeBar: false
+            };
+            
+            Plotly.newPlot('metricsChart', [trace1, trace2], layout, config);
+        }
+        
+        // Create importance chart
+        function createImportanceChart() {
+            const attributes = importanceData.map(d => d.attribute.replace(/_/g, ' ').replace('pct', '%'));
+            const scores = importanceData.map(d => d.importance_score);
+
+            
+            const trace1 = {
+                x: scores,
+                y: attributes,
+                type: 'bar',
+                orientation: 'h',
+                name: 'Importance Score',
+                marker: {
+                    color: scores,
+                    colorscale: 'Viridis',
+                    line: {
+                        color: 'rgba(0,0,0,0.2)',
+                        width: 1
+                    }
+                },
+            };
+            
+            const layout = {
+                margin: { t: 20, b: 40, l: 180, r: 40 },
+                xaxis: {
+                    title: 'Importance Score (0-100)',
+                    titlefont: { size: 13 },
+                    gridcolor: '#f0f0f0'
+                },
+                yaxis: {
+                    tickfont: { size: 11 },
+                    automargin: true
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                height: 350,
+                showlegend: false,
+                font: { family: 'Arial, sans-serif' }
+            };
+            
+            const config = {
+                responsive: true,
+                displayModeBar: false
+            };
+            
+            Plotly.newPlot('importanceChart', [trace1], layout, config);
+        }
+        
+        // Create evolution chart
+        function createEvolutionChart() {
+            const periods = dashboardData.periods.map(p => p.name.split(' ')[1]);
+            const groups = ['A', 'B', 'C', 'D'];
+            const groupNames = {
+                'A': 'High-Income',
+                'B': 'Emerging',
+                'C': 'Developing',
+                'D': 'High-Inflation'
+            };
+            const colors = {
+                'A': '#2E7D32',
+                'B': '#1976D2',
+                'C': '#F57C00',
+                'D': '#C62828'
+            };
+            
+            const traces = groups.map(groupId => {
+                const counts = dashboardData.periods.map(period => {
+                    const periodData = dashboardData.data[period.id.toString()];
+                    const group = periodData.find(g => g.id === groupId);
+                    return group ? group.count : 0;
+                });
+                
+                return {
+                    x: periods,
+                    y: counts,
+                    name: groupNames[groupId],
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    marker: {
+                        color: colors[groupId],
+                        size: 8,
+                        line: {
+                            color: 'white',
+                            width: 2
+                        }
+                    },
+                    line: {
+                        color: colors[groupId],
+                        width: 3
+                    },
+                    hovertemplate: '<b>%{fullData.name}</b><br>' +
+                                 'Period: %{x}<br>' +
+                                 'Countries: %{y}<extra></extra>'
+                };
+            });
+            
+            const layout = {
+                margin: { t: 20, b: 60, l: 60, r: 20 },
+                xaxis: {
+                    title: 'Time Period',
+                    titlefont: { size: 13 },
+                    tickfont: { size: 10 }
+                },
+                yaxis: {
+                    title: 'Number of Countries',
+                    titlefont: { size: 13 },
+                    gridcolor: '#f0f0f0'
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                height: 400,
+                showlegend: true,
+                legend: {
+                    x: 0.02,
+                    y: 0.98,
+                    bgcolor: 'rgba(255,255,255,0.95)',
+                    bordercolor: '#ddd',
+                    borderwidth: 1,
+                    font: { size: 11 }
+                },
+                hovermode: 'closest',
+                font: { family: 'Arial, sans-serif' }
+            };
+            
+            const config = {
+                responsive: true,
+                displayModeBar: false
+            };
+            
+            Plotly.newPlot('evolutionChart', traces, layout, config);
+        }
+        
+        // Show all countries
+        function showAllCountries(periodData) {
+            const container = document.getElementById('countryList');
+            container.innerHTML = '';
+            
+            periodData.forEach(group => {
+                const section = document.createElement('div');
+                section.className = 'group-section';
+                
+                const header = document.createElement('div');
+                header.className = 'group-header';
+                header.style.background = group.color;
+                header.innerHTML = `
+                    <span>${group.name}</span>
+                    <span class="group-badge">${group.count} countries</span>
+                `;
+                section.appendChild(header);
+                
+                // Add metrics
+                const metrics = document.createElement('div');
+                metrics.className = 'metrics';
+                metrics.innerHTML = `
+                    <div class="metric-card">
+                        <div class="metric-label">Median GDP/capita</div>
+                        <div class="metric-value">$${group.gdp.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Median Inflation</div>
+                        <div class="metric-value">${group.inflation.toFixed(2)}%</div>
+                    </div>
+                `;
+                section.appendChild(metrics);
+                
+                // Add countries
+                group.countries.forEach(country => {
+                    const item = document.createElement('div');
+                    item.className = 'country-item';
+                    item.textContent = country;
+                    section.appendChild(item);
+                });
+                
+                container.appendChild(section);
+            });
+        }
+        
+        // Show countries for specific group
+        function showCountriesForGroup(group) {
+            const container = document.getElementById('countryList');
+            container.innerHTML = '';
+            
+            const section = document.createElement('div');
+            section.className = 'group-section';
+            
+            const header = document.createElement('div');
+            header.className = 'group-header';
+            header.style.background = group.color;
+            header.innerHTML = `
+                <span>${group.name}</span>
+                <span class="group-badge">${group.count} countries</span>
+            `;
+            section.appendChild(header);
+            
+            // Add metrics
+            const metrics = document.createElement('div');
+            metrics.className = 'metrics';
+            metrics.innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-label">Median GDP/capita</div>
+                    <div class="metric-value">$$${group.gdp.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Median Inflation</div>
+                    <div class="metric-value">${group.inflation.toFixed(2)}%</div>
+                </div>
+            `;
+            if (group.unemployment !== null) {
+                metrics.innerHTML += `
+                    <div class="metric-card">
+                        <div class="metric-label">Median Unemployment</div>
+                        <div class="metric-value">${group.unemployment.toFixed(2)}%</div>
+                    </div>
+                `;
+            }
+            if (group.trade !== null) {
+                metrics.innerHTML += `
+                    <div class="metric-card">
+                        <div class="metric-label">Median Trade</div>
+                        <div class="metric-value">${group.trade.toFixed(1)}% GDP</div>
+                    </div>
+                `;
+            }
+            section.appendChild(metrics);
+            
+            // Add "Show All Groups" button
+            const backBtn = document.createElement('button');
+            backBtn.style.cssText = 'margin: 15px 0; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;';
+            backBtn.textContent = '← Show All Groups';
+            backBtn.onclick = () => {
+                selectedGroup = null;
+                const periodData = dashboardData.data[currentPeriod.toString()];
+                showAllCountries(periodData);
+            };
+            section.appendChild(backBtn);
+            
+            // Add countries
+            group.countries.forEach(country => {
+                const item = document.createElement('div');
+                item.className = 'country-item';
+                item.textContent = country;
+                section.appendChild(item);
+            });
+            
+            container.appendChild(section);
+        }
+    </script>
+</body>
+</html>
